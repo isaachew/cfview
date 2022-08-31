@@ -1,0 +1,18 @@
+#problemList{
+    overflow-y:scroll;
+    height:300px
+}
+
+.problem{
+    border:1px solid #ccc
+}
+
+.problemDetails{
+    display:flex;
+    flex-direction:row;
+    justify-content: space-between;
+}
+
+.problemTags{
+    text-align:center
+}

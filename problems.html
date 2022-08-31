@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <link rel="stylesheet" href="problems.css">
+        <script src="problems.js" defer></script>
+    </head>
+    <body>
+        <div id="problemList"></div>
+        <div>
+            <button onclick="getProblem()">Random problem</button>
+        </div>
+        <button onclick="refreshSubmissions()">Refresh submissions</button>
+        <div id="searchProblems">
+            <div><label>Title: <input id="searchTitle"></label></div>
+            <div><label>Index: <input id="searchIndex"></label></div>
+            <div>
+                Rating:
+                <input type="number" id="searchRatingMin" class="ratingInput">
+                to
+                <input type="number" id="searchRatingMax" class="ratingInput">
+            </div>
+            <button onclick="searchProblems()">Search</button>
+        </div>
+        <div id="probInfo">
+            <div>
+                <input id="probId" onchange="loadProb()">
+            </div>
+            <div>
+                <span id="probStatus"></span>
+            </div>
+            <div>
+                <textarea id="probNotes"></textarea>
+            </div>
+            <div id="probSubmissions"></div>
+            <div>
+                <button onclick="updProb()">Update</button>
+            </div>
+        </div>
+    </body>
+</html>

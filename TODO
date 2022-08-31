@@ -1,0 +1,31 @@
+Codeforces Viewer
+- Use indexedDB and reload when necessary
+- Problem stats:
+  - Number of attempts
+  - Time taken to solve
+- True problem filter:
+  - Rating
+  - Title
+
+
+Format:
+- The "problemset" object store stores the Codeforces problems from the API
+- The "problems" store has the user-specific data (solved, num. attempts, custom notes)
+
+- viewTime
+- status: unsolved, attempted, solved, upsolved
+- notes
+- tags
+- Upsolved
+
+Problem stats viewer:
+- Your submissions
+- Notes, custom tags
+
+
+Unlisted Codeforces API (/data):
+Requests use a CSRF token in meta tag on page (use document.querySelector("[name='X-Csrf-Token']").content)
+Use POST requests with application/x-www-form-urlencoded and csrf_token attribute
+
+submitSource: get JSON data of submission
+Parameters: submissionId
