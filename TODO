@@ -21,11 +21,16 @@ Format:
 Problem stats viewer:
 - Your submissions
 - Notes, custom tags
+- Custom problem/contest lists
+
+- Your contests in list form
 
 
 Unlisted Codeforces API (/data):
 Requests use a CSRF token in meta tag on page (use document.querySelector("[name='X-Csrf-Token']").content)
-Use POST requests with application/x-www-form-urlencoded and csrf_token attribute
+Use POST requests with Content-Type application/x-www-form-urlencoded and csrf_token attribute
 
 submitSource: get JSON data of submission
 Parameters: submissionId
+changeParticipantType: move to practice in coach mode
+await fetch("https://codeforces.com/data/submitSource",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:Object.entries({csrf_token:"csrf",submissionId:174139387}).map(a=>a[0]+"="+encodeURIComponent(a[1])).join("&")}).then(a=>a.json())

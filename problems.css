@@ -16,3 +16,12 @@
 .problemTags{
     text-align:center
 }
+
+
+.ratingInput{
+    width:50px
+}
+
+#problemSearch{
+    border:1px solid black
+}

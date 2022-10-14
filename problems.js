@@ -173,25 +173,24 @@ async function refreshSubmissions(){
 
 var problemTime=0
 function getProblem(){
-    let filtered=Object.values(data.problemset).filter(a=>a.rating>=2300&&a.rating<=2600)
+    let filtered=Object.values(data.problemset).filter(a=>a.rating>=2200&&a.rating<=2600)
     let prob=filtered[Math.random()*filtered.length|0]
     let probEl=document.createElement("a")
     probEl.href="https://codeforces.com/contest/"+prob.contestId+"/problem/"+prob.index
     probEl.target="_blank"
     probEl.append("problem")
-    probEl.addEventListener("click",async a=>{
-        problemTime=Date.now()/1000|0
-        data.problemset[prob.contestId+prob.index].visitTime=problemTime
-
-        let db=await waitFor(req)
-        let trans=db.transaction("problems","readwrite")
-        var obStore=trans.objectStore("problems")
-        var obj=await waitFor(obStore.get([prob.contestId,prob.index]))
-        if(!obj)obj={contestId:prob.contestId,index:prob.index,completionTime:null,attempts:0,submissionId:null,status:"uncompleted"}
-        obj.visitTime=problemTime
-        obStore.put(obj)
-    })
+    probEl.addEventListener("click",()=>viewProblem(prob.contestId+prob.index))
     document.body.append(probEl)
+}
+
+async function viewProblem(probid){
+    var problemTime=Date.now()/1000|0
+
+    let db=await waitFor(req)
+    let trans=db.transaction("problems","readwrite")
+    var obStore=trans.objectStore("problems")
+    data.problemData[probid].viewTime=problemTime
+    obStore.put(data.problemData[probid])
 }
 
 function getProblemStats(contestId,index){
@@ -217,6 +216,7 @@ Display index/link, title, difficulty
     indexDisp.href="https://codeforces.com/problemset/problem/"+prob.contestId+"/"+prob.index
     indexDisp.target="_blank"
     indexDisp.append(prob.contestId+prob.index)
+    indexDisp.addEventListener("click",()=>viewProblem(probid))
     var nameDisp=document.createElement("div")
     nameDisp.append(prob.name)
     var ratingDisp=document.createElement("div")
@@ -234,6 +234,7 @@ Display index/link, title, difficulty
     })
     if(data.problemData[probid].solved)el.style.backgroundColor="#afa"
     else if(data.problemData[probid].notes)el.style.backgroundColor="#aaf"
+    else if(data.problemData[probid].viewTime)el.style.backgroundColor="#aff"
 
     return el
 }
@@ -270,20 +271,37 @@ async function updProb(pid){
     pref.notes=document.getElementById("probNotes").value
     os.put(pref)
 }
+function unviewProb(pid){
+    if(pid){
+        document.getElementById("probId").value=pid
+    }else{
+        pid=document.getElementById("probId").value
+    }
+    data.problemData[pid].viewTime=null
+}
 function searchProblems(){
 
     document.getElementById("problemList").innerHTML=""
     let titleS=document.getElementById("searchTitle").value
-    let titleF=problemIds.filter(a=>data.problemset[a].name.toLowerCase().includes(titleS.toLowerCase()))
+    let titleF=problemIds.filter(a=>{
+        if(document.getElementById("searchRegexp").checked){
+            return new RegExp(titleS).test(data.problemset[a].name)
+        }
+        return data.problemset[a].name.toLowerCase().includes(titleS.toLowerCase())
+    })
     let indexS=document.getElementById("searchIndex").value
     let indexF=titleF.filter(a=>a.includes(indexS))
 
     let ratingMin=document.getElementById("searchRatingMin").value
     let ratingMax=document.getElementById("searchRatingMax").value
     let rateSearch=ratingMin!=""||ratingMax!=""
-    let sRes=ratingMin==0?indexF:indexF.filter(a=>data.problemset[a].rating>=(+ratingMin||0)&&data.problemset[a].rating<=(+ratingMax||Infinity))
+    let sRes=rateSearch?indexF.filter(a=>data.problemset[a].rating>=(+ratingMin||0)&&data.problemset[a].rating<=(+ratingMax||Infinity)):indexF
+    let tags=document.getElementById("searchTags").value.split(",")
+    if(tags[0]=="")tags=[]
+    sRes=sRes.filter(a=>tags.every(b=>data.problemset[a].tags.includes(b)))
     //console.log(sRes)
     for(let i of sRes){
         document.getElementById("problemList").appendChild(genProblemEl(i))
     }
 }
+let tagTypes=["2-sat","binary search","bitmasks","brute force","chinese remainder theorem","combinatorics","constructive algorithms","data structures","dfs and similar","divide and conquer","dp","dsu","expression parsing","fft","flows","games","geometry","graph matchings","graphs","greedy","hashing","implementation","interactive","math","matrices","meet-in-the-middle","number theory","probabilities","schedules","shortest paths","sortings","string suffix structures","strings","ternary search","trees","two pointers"]

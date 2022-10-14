@@ -10,9 +10,10 @@
         <div>
             <button onclick="getProblem()">Random problem</button>
         </div>
+        <button onclick="refreshProblems()">Reload submissions</button>
         <button onclick="refreshSubmissions()">Refresh submissions</button>
-        <div id="searchProblems">
-            <div><label>Title: <input id="searchTitle"></label></div>
+        <div id="problemSearch">
+            <div><label>Title: <input id="searchTitle"></label><label><input type="checkbox" id="searchRegexp"> Regex search</label></div>
             <div><label>Index: <input id="searchIndex"></label></div>
             <div>
                 Rating:
@@ -20,6 +21,7 @@
                 to
                 <input type="number" id="searchRatingMax" class="ratingInput">
             </div>
+            <div>Tags: <input id="searchTags"></div>
             <button onclick="searchProblems()">Search</button>
         </div>
         <div id="probInfo">
@@ -34,6 +36,7 @@
             </div>
             <div id="probSubmissions"></div>
             <div>
+                <button onclick="unviewProb()">Mark as unviewed</button>
                 <button onclick="updProb()">Update</button>
             </div>
         </div>
