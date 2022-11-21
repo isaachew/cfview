@@ -1,10 +1,14 @@
+body{
+    font-family:sans-serif;
+}
+
 #problemList{
     overflow-y:scroll;
-    height:300px
+    height:300px;
 }
 
 .problem{
-    border:1px solid #ccc
+    border:1px solid #ccc;
 }
 
 .problemDetails{
@@ -14,14 +18,14 @@
 }
 
 .problemTags{
-    text-align:center
+    text-align:center;
 }
 
 
 .ratingInput{
-    width:50px
+    width:50px;
 }
 
 #problemSearch{
-    border:1px solid black
+    border:1px solid black;
 }

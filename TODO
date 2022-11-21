@@ -34,3 +34,14 @@ submitSource: get JSON data of submission
 Parameters: submissionId
 changeParticipantType: move to practice in coach mode
 await fetch("https://codeforces.com/data/submitSource",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:Object.entries({csrf_token:"csrf",submissionId:174139387}).map(a=>a[0]+"="+encodeURIComponent(a[1])).join("&")}).then(a=>a.json())
+
+contests:
+    Actions:
+        - getContestTime
+        Parameters: contestId
+
+lists:
+    Actions:
+        - getTouched
+        Parameters: None
+        Gets the lists the registered user has seen or created.

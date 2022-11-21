@@ -6,12 +6,6 @@
         <script src="problems.js" defer></script>
     </head>
     <body>
-        <div id="problemList"></div>
-        <div>
-            <button onclick="getProblem()">Random problem</button>
-        </div>
-        <button onclick="refreshProblems()">Reload submissions</button>
-        <button onclick="refreshSubmissions()">Refresh submissions</button>
         <div id="problemSearch">
             <div><label>Title: <input id="searchTitle"></label><label><input type="checkbox" id="searchRegexp"> Regex search</label></div>
             <div><label>Index: <input id="searchIndex"></label></div>
@@ -22,22 +16,33 @@
                 <input type="number" id="searchRatingMax" class="ratingInput">
             </div>
             <div>Tags: <input id="searchTags"></div>
+            <div>Lists: <input id="searchLists"></div>
             <button onclick="searchProblems()">Search</button>
         </div>
+        <div id="problemList"></div>
+        <div>
+            <button onclick="getProblem()">Random problem</button>
+        </div>
+        <button onclick="refreshProblems()">Reload submissions</button>
+        <button onclick="refreshSubmissions()">Refresh submissions</button>
+
         <div id="probInfo">
             <div>
-                <input id="probId" onchange="loadProb()">
+                Problem: <span id="probName"></span> (<span id="probId"></span>)
             </div>
             <div>
                 <span id="probStatus"></span>
             </div>
             <div>
+                Notes:
                 <textarea id="probNotes"></textarea>
             </div>
-            <div id="probSubmissions"></div>
+            <table id="submissionsTable"><tr><th>ID</th><th>Verdict</th><th>Time</th></tr><tbody id="probSubmissions"></tbody></table>
+            <div><div id="problemLists">None</div><input id="addList"></input>
+            <button id="removeList">Rem.</button></div>
             <div>
-                <button onclick="unviewProb()">Mark as unviewed</button>
-                <button onclick="updProb()">Update</button>
+                <button onclick="unviewProb(curProbId)">Mark as unviewed</button>
+                <button onclick="updProb(curProbId)">Update</button>
             </div>
         </div>
     </body>

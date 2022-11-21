@@ -78,6 +78,7 @@ req.onupgradeneeded=a=>{
     store.createIndex("attempts","attempts")
     store.createIndex("submissionId","submissionId")
     store.createIndex("status","status")
+    store.createIndex("list","list")
 }
 let reverseIndexOrder=false
 async function loadFromDB(){
@@ -91,6 +92,7 @@ async function loadFromDB(){
     problemIds=probs.map(a=>a.contestId+a.index)
     data.problemset={}
     data.problemData={}
+    data.problemLists={}
     for(var i of probs){
         data.problemset[i.contestId+i.index]=i
         data.problemData[i.contestId+i.index]={
@@ -100,14 +102,14 @@ async function loadFromDB(){
             solved:false,
             status:"",
             notes:"",
-            tags:[]
+            lists:[]
         }
     }
 
     var userStore=trans.objectStore("problems")
     let userData=await waitFor(userStore.getAll())
     for(var i of userData){
-        data.problemData[i.contestId+i.index]=i
+        Object.assign(data.problemData[i.contestId+i.index],i)
     }
 
     var subms=trans.objectStore("submissions")
@@ -137,6 +139,7 @@ async function refreshProblems(){
 
     data.problemset={}
     data.problemData={}
+    data.problemLists={}
     for(var i of resp.problems){
         //i.id=[i.contestId,i.index]
         data.problemset[i.contestId+i.index]=i
@@ -147,7 +150,7 @@ async function refreshProblems(){
             solved:false,
             status:"",
             notes:"",
-            tags:[]
+            lists:[]
         }
     }
     for(var i of resp.problemStatistics){
@@ -170,7 +173,7 @@ async function refreshSubmissions(){
     return subms
 }
 
-
+var curProbId=null
 var problemTime=0
 function getProblem(){
     let filtered=Object.values(data.problemset).filter(a=>a.rating>=2200&&a.rating<=2600)
@@ -201,7 +204,7 @@ function getProblemStats(contestId,index){
         }
     }
 }
-apiAuth={key:"95fd01ab122a112fe03225e64a2082c5accb502b",secret:"735c83074a77281ceb94868ba3ef3da0e0a0a2b1"}
+if(localStorage.apiKey)apiAuth={key:localStorage.apiKey,secret:localStorage.apiSecret}
 function genProblemEl(probid){
     /*
 Display index/link, title, difficulty
@@ -221,12 +224,8 @@ Display index/link, title, difficulty
     nameDisp.append(prob.name)
     var ratingDisp=document.createElement("div")
     ratingDisp.append(prob.rating||"unrated")
-
-    var tagsDisp=document.createElement("div")
-    tagsDisp.className="problemTags"
-    //tagsDisp.append(prob.tags)
     contentEl.append(indexDisp,nameDisp,ratingDisp)
-    el.append(contentEl,tagsDisp)
+    el.append(contentEl)
     el.className="problem"
     el.dataset.problemId=probid
     el.addEventListener("click",function(){
@@ -245,25 +244,59 @@ function listProblems(){
         document.getElementById("problemList").append(prEl)
     }
 }
+document.getElementById("addList").addEventListener("change",a=>{
+    data.problemData[curProbId].lists.push(a.target.value)
+    updProb(curProbId)
+    var listsEl=document.getElementById("problemLists")
+    var tagElem=document.createElement("div")
+    Object.assign(tagElem,{
+        textContent:a.target.value,
+        className:"aTag"
+    })
+    listsEl.append(tagElem)
+})
+document.getElementById("removeList").addEventListener("click",a=>{
+    data.problemData[curProbId].lists=data.problemData[curProbId].lists.filter(b=>b!=document.getElementById("addList").value)//replace with set later
+    updProb(curProbId)
+    loadProb(curProbId)
+})
 loadFromDB().then(listProblems)
 //requestAPI("user.friends",{}).then(console.log)
 //requestAPI("problemset.problems",{tags:"dfs and similar"}).then(console.log)
-
+function toHMS(secs){
+    let toTEl=el=>(""+Math.floor(el)).padStart(2,0)
+    return toTEl(secs/3600)+":"+toTEl(secs/60%60)+":"+toTEl(secs%60)
+}
 function loadProb(pid){
-    if(pid){
-        document.getElementById("probId").value=pid
-    }else{
-        pid=document.getElementById("probId").value
-    }
-    document.getElementById("probStatus").textContent=data.problemData[pid].status??""
+    curProbId=pid
+    document.getElementById("probId").textContent=pid
+    document.getElementById("probName").textContent=data.problemset[pid].name
+    document.getElementById("probStatus").textContent=data.problemData[pid].status??"";
     document.getElementById("probNotes").value=data.problemData[pid].notes
+    document.getElementById("probSubmissions").innerHTML=""
+    for(var i of data.submissions){
+        let submEl=document.createElement("tr")
+        let subLink=document.createElement("td")
+        subLink.innerHTML=`<a href="https://codeforces.com/contest/${i.contestId}/submission/${i.id}">${i.id}</a>`;
+        let verdict=document.createElement("td")
+        verdict.append(i.verdict+" "+(i.verdict=="OK"?i.passedTestCount:i.passedTestCount+1))
+        let relTimeEl=document.createElement("td")
+        relTimeEl.append(i.relativeTimeSeconds==2147483647?"N/A":toHMS(i.relativeTimeSeconds))
+        submEl.append(subLink,verdict,relTimeEl)
+        if(i.problem.contestId+i.problem.index==curProbId)document.getElementById("probSubmissions").appendChild(submEl)
+    }
+    var listsEl=document.getElementById("problemLists")
+    listsEl.innerHTML=""
+    for(let i of data.problemData[curProbId].lists){
+        var tagElem=document.createElement("div")
+        Object.assign(tagElem,{
+            textContent:i,
+            className:"aTag"
+        })
+        listsEl.append(tagElem)
+    }
 }
 async function updProb(pid){
-    if(pid){
-        document.getElementById("probId").value=pid
-    }else{
-        pid=document.getElementById("probId").value
-    }
     let db=await waitFor(req)
     let trans=db.transaction("problems","readwrite")
     let os=trans.objectStore("problems")
@@ -272,11 +305,7 @@ async function updProb(pid){
     os.put(pref)
 }
 function unviewProb(pid){
-    if(pid){
-        document.getElementById("probId").value=pid
-    }else{
-        pid=document.getElementById("probId").value
-    }
+    document.getElementById("probId").value=pid
     data.problemData[pid].viewTime=null
 }
 function searchProblems(){
@@ -299,6 +328,9 @@ function searchProblems(){
     let tags=document.getElementById("searchTags").value.split(",")
     if(tags[0]=="")tags=[]
     sRes=sRes.filter(a=>tags.every(b=>data.problemset[a].tags.includes(b)))
+    let lists=document.getElementById("searchLists").value.split(",")
+    if(lists[0]=="")lists=[]
+    sRes=sRes.filter(a=>lists.every(b=>data.problemData[a].lists.includes(b)))
     //console.log(sRes)
     for(let i of sRes){
         document.getElementById("problemList").appendChild(genProblemEl(i))
