@@ -43,8 +43,12 @@ body{
     border:1px solid black;
     border-radius:7px;
     position:relative;
-    padding:2px 12px 2px 2px;
+    padding:2px 2px 2px 2px;
     margin:2px 0 2px 2px;
+}
+.probTag.userTag{
+    background-color:#eee;
+    padding:2px 12px 2px 2px;
 }
 .removeTag{
     display:block;

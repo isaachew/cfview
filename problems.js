@@ -244,38 +244,42 @@ function listProblems(){
         document.getElementById("problemList").append(prEl)
     }
 }
-function getTagEl(tag){
+function getTagEl(tag,isUser=false){
     var tagElem=document.createElement("div")
     var lnkElem=document.createElement("div")
-    var remElem=document.createElement("div")
     lnkElem.addEventListener("click",a=>{
-        document.getElementById("searchLists").value=tag
+        if(isUser){
+            document.getElementById("searchLists").value=tag
+        }else{
+            document.getElementById("searchTags").value=tag
+        }
         searchProblems()
     })
     Object.assign(tagElem,{
         className:"probTag"
     })
+    if(isUser)tagElem.classList.add("userTag")
     lnkElem.append(tag)
     tagElem.appendChild(lnkElem)
-    tagElem.addEventListener("click",a=>{
-
-    })
-    Object.assign(remElem,{
-        textContent:"\u00a0".repeat(3),
-        className:"removeTag"
-    })
-    remElem.addEventListener("click",a=>{
-        removeTag(tag)
-    })
-    tagElem.appendChild(remElem)
+    if(isUser){
+        var remElem=document.createElement("div")
+        Object.assign(remElem,{
+            textContent:"\u00a0".repeat(3),
+            className:"removeTag"
+        })
+        remElem.addEventListener("click",a=>{
+            removeTag(tag)
+        })
+        tagElem.appendChild(remElem)
+    }
     return tagElem
 }
 document.getElementById("addList").addEventListener("input",a=>{
     data.problemData[curProbId].lists.push(a.target.value)
     updProb(curProbId)
-    var listsEl=document.getElementById("problemLists")
+    var listsEl=document.getElementById("problemTags")
 
-    listsEl.append(getTagEl(a.target.value))
+    listsEl.append(getTagEl(a.target.value,true))
 })
 function removeTag(tag){
     data.problemData[curProbId].lists=data.problemData[curProbId].lists.filter(b=>b!=tag)//replace with set later
@@ -307,10 +311,15 @@ function loadProb(pid){
         submEl.append(subLink,verdict,relTimeEl)
         if(i.problem.contestId+i.problem.index==curProbId)document.getElementById("probSubmissions").appendChild(submEl)
     }
-    var listsEl=document.getElementById("problemLists")
-    listsEl.innerHTML=""
+    var tagsEl=document.getElementById("problemTags")
+    tagsEl.innerHTML=""
+    if(data.problemData[curProbId].solved){
+        for(let i of data.problemset[curProbId].tags){
+            tagsEl.append(getTagEl(i))
+        }
+    }
     for(let i of data.problemData[curProbId].lists){
-        listsEl.append(getTagEl(i))
+        tagsEl.append(getTagEl(i,true))
     }
 }
 async function updProb(pid){
