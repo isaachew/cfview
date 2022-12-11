@@ -244,22 +244,44 @@ function listProblems(){
         document.getElementById("problemList").append(prEl)
     }
 }
-document.getElementById("addList").addEventListener("change",a=>{
+function getTagEl(tag){
+    var tagElem=document.createElement("div")
+    var lnkElem=document.createElement("div")
+    var remElem=document.createElement("div")
+    lnkElem.addEventListener("click",a=>{
+        document.getElementById("searchLists").value=tag
+        searchProblems()
+    })
+    Object.assign(tagElem,{
+        className:"probTag"
+    })
+    lnkElem.append(tag)
+    tagElem.appendChild(lnkElem)
+    tagElem.addEventListener("click",a=>{
+
+    })
+    Object.assign(remElem,{
+        textContent:"\u00a0".repeat(3),
+        className:"removeTag"
+    })
+    remElem.addEventListener("click",a=>{
+        removeTag(tag)
+    })
+    tagElem.appendChild(remElem)
+    return tagElem
+}
+document.getElementById("addList").addEventListener("input",a=>{
     data.problemData[curProbId].lists.push(a.target.value)
     updProb(curProbId)
     var listsEl=document.getElementById("problemLists")
-    var tagElem=document.createElement("div")
-    Object.assign(tagElem,{
-        textContent:a.target.value,
-        className:"aTag"
-    })
-    listsEl.append(tagElem)
+
+    listsEl.append(getTagEl(a.target.value))
 })
-document.getElementById("removeList").addEventListener("click",a=>{
-    data.problemData[curProbId].lists=data.problemData[curProbId].lists.filter(b=>b!=document.getElementById("addList").value)//replace with set later
+function removeTag(tag){
+    data.problemData[curProbId].lists=data.problemData[curProbId].lists.filter(b=>b!=tag)//replace with set later
     updProb(curProbId)
     loadProb(curProbId)
-})
+}
 loadFromDB().then(listProblems)
 //requestAPI("user.friends",{}).then(console.log)
 //requestAPI("problemset.problems",{tags:"dfs and similar"}).then(console.log)
@@ -288,12 +310,7 @@ function loadProb(pid){
     var listsEl=document.getElementById("problemLists")
     listsEl.innerHTML=""
     for(let i of data.problemData[curProbId].lists){
-        var tagElem=document.createElement("div")
-        Object.assign(tagElem,{
-            textContent:i,
-            className:"aTag"
-        })
-        listsEl.append(tagElem)
+        listsEl.append(getTagEl(i))
     }
 }
 async function updProb(pid){

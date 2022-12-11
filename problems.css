@@ -29,3 +29,30 @@ body{
 #problemSearch{
     border:1px solid black;
 }
+
+#submissionsTable :is(th,td){
+    border:1px solid black;
+    width:180px;
+}
+#submissionsTable{
+    border-collapse:collapse;
+}
+
+.probTag{
+    display:inline-block;
+    border:1px solid black;
+    border-radius:7px;
+    position:relative;
+    padding:2px 12px 2px 2px;
+    margin:2px 0 2px 2px;
+}
+.removeTag{
+    display:block;
+    float:right;
+    width:5px;
+    height:5px;
+    background-color:red;
+    margin:auto;
+    position:absolute;
+    right:5px;top:0;bottom:0;
+}

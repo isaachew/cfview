@@ -21,10 +21,10 @@
         </div>
         <div id="problemList"></div>
         <div>
-            <button onclick="getProblem()">Random problem</button>
+            <!--<button onclick="getProblem()">Random problem</button>-->
+            <button onclick="refreshProblems()">Reload problems</button>
+            <button onclick="refreshSubmissions()">Reload submissions</button>
         </div>
-        <button onclick="refreshProblems()">Reload submissions</button>
-        <button onclick="refreshSubmissions()">Refresh submissions</button>
 
         <div id="probInfo">
             <div>
@@ -37,9 +37,18 @@
                 Notes:
                 <textarea id="probNotes"></textarea>
             </div>
-            <table id="submissionsTable"><tr><th>ID</th><th>Verdict</th><th>Time</th></tr><tbody id="probSubmissions"></tbody></table>
-            <div><div id="problemLists">None</div><input id="addList"></input>
-            <button id="removeList">Rem.</button></div>
+            <table id="submissionsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Verdict</th>
+                        <th>Rel. Time</th>
+                    </tr>
+                </thead>
+                <tbody id="probSubmissions">
+                </tbody>
+            </table>
+            <div><div id="problemLists">None</div><input id="addList"></input></div>
             <div>
                 <button onclick="unviewProb(curProbId)">Mark as unviewed</button>
                 <button onclick="updProb(curProbId)">Update</button>
