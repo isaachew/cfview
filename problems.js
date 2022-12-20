@@ -1,4 +1,4 @@
-var userHandle="isaachew"
+var userHandle=localStorage.userHandle||null
 
 //A helper function to request from the Codeforces API.
 async function sha512(string){
@@ -126,6 +126,7 @@ function processSubmissions(subms){
             if(i.verdict=="OK")data.problemData[probId].solved=true
         }
     }
+    listProblems()
 }
 
 async function refreshProblems(){
@@ -136,21 +137,23 @@ async function refreshProblems(){
 
     var trans=db.transaction("problemset","readwrite")
     var obStore=trans.objectStore("problemset")
-
+    problemIds=resp.problems.map(a=>a.contestId+a.index)
     data.problemset={}
-    data.problemData={}
+    //data.problemData={}
     data.problemLists={}
     for(var i of resp.problems){
         //i.id=[i.contestId,i.index]
         data.problemset[i.contestId+i.index]=i
-        data.problemData[i.contestId+i.index]={
-            contestId:i.contestId,
-            index:i.index,
-            viewTime:null,
-            solved:false,
-            status:"",
-            notes:"",
-            lists:[]
+        if(!data.problemData[i.contestId+i.index]){
+                data.problemData[i.contestId+i.index]={
+                contestId:i.contestId,
+                index:i.index,
+                viewTime:null,
+                solved:false,
+                status:"",
+                notes:"",
+                lists:[]
+            }
         }
     }
     for(var i of resp.problemStatistics){
@@ -170,6 +173,7 @@ async function refreshSubmissions(){
         obStore.put(i)
     }
     processSubmissions(subms)
+    console.log("done loading submissions")
     return subms
 }
 
@@ -232,6 +236,7 @@ Display index/link, title, difficulty
         loadProb(probid)
     })
     if(data.problemData[probid].solved)el.style.backgroundColor="#afa"
+    else if(data.problemData[probid].attempted)el.style.backgroundColor="#ffa"
     else if(data.problemData[probid].notes)el.style.backgroundColor="#aaf"
     else if(data.problemData[probid].viewTime)el.style.backgroundColor="#aff"
 
@@ -274,12 +279,12 @@ function getTagEl(tag,isUser=false){
     }
     return tagElem
 }
-document.getElementById("addList").addEventListener("input",a=>{
-    data.problemData[curProbId].lists.push(a.target.value)
+document.getElementById("addListBtn").addEventListener("click",a=>{
+    data.problemData[curProbId].lists.push(document.getElementById("addList").value)
     updProb(curProbId)
     var listsEl=document.getElementById("problemTags")
 
-    listsEl.append(getTagEl(a.target.value,true))
+    listsEl.append(getTagEl(document.getElementById("addList").value,true))
 })
 function removeTag(tag){
     data.problemData[curProbId].lists=data.problemData[curProbId].lists.filter(b=>b!=tag)//replace with set later
@@ -360,6 +365,22 @@ function searchProblems(){
     //console.log(sRes)
     for(let i of sRes){
         document.getElementById("problemList").appendChild(genProblemEl(i))
+    }
+}
+function loadUser(handle){
+    userHandle=handle
+    let trans=req.result.transaction(["problems","submissions"],"readwrite")
+    let probos=trans.objectStore("problems")
+    let sos=trans.objectStore("submissions")
+    sos.clear()
+    for(var i in data.problemData){
+        data.problemData[i].solved=false
+        data.problemData[i].attempted=false
+        probos.put(data.problemData[i])
+    }
+    trans.oncomplete=e=>{
+        console.log("done")
+        refreshSubmissions()
     }
 }
 let tagTypes=["2-sat","binary search","bitmasks","brute force","chinese remainder theorem","combinatorics","constructive algorithms","data structures","dfs and similar","divide and conquer","dp","dsu","expression parsing","fft","flows","games","geometry","graph matchings","graphs","greedy","hashing","implementation","interactive","math","matrices","meet-in-the-middle","number theory","probabilities","schedules","shortest paths","sortings","string suffix structures","strings","ternary search","trees","two pointers"]
