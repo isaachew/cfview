@@ -2,17 +2,16 @@ var userHandle=localStorage.userHandle||null
 
 //A helper function to request from the Codeforces API.
 async function sha512(string){
-    var textBuf=new Uint8Array([...string].map(a=>a.charCodeAt()))
+    var textBuf=new Uint8Array(Array.from(string).map(a=>a.charCodeAt()))
     console.log(textBuf.buffer)
-    let hashBuf=await crypto.subtle.digest("SHA-512",textBuf.buffer)
-    let hashArray=new Uint8Array(hashBuf)
-    let hex=Array.from(hashArray).map(b=>b.toString(16).padStart(2,0)).join``
+    var hashBuf=await crypto.subtle.digest("SHA-512",textBuf.buffer)
+    var hashArray=new Uint8Array(hashBuf)
+    var hex=Array.from(hashArray).map(b=>b.toString(16).padStart(2,"0")).join``
     return hex
 }
 var apiAuth=null
 
 async function requestAPI(command,options={}){
-    if(options.secret)return
     let orig="https://codeforces.com"
     let url=new URL(orig)
     url.pathname="/api/"+command
@@ -43,17 +42,21 @@ async function requestAPI(command,options={}){
 
 //Converts an IDBRequest into a promise to be awaited.
 function waitFor(req){
-    if(req.readyState=="done")return req.result
+    if(req.readyState=="done"){
+        if(req.error)return Promise.reject(error)
+        return Promise.resolve(req.result)
+    }
     return new Promise((res,rej)=>{
         req.onsuccess=e=>res(req.result)
         req.onerror=e=>rej(req.error)
     })
 }
 
-let data={}
+let data={problemset:{},problemData:{}}
 let problemIds=[]
 
 var req=indexedDB.open("codeforces",1)
+var initDB=false
 req.onupgradeneeded=a=>{
     console.log("creating database")
     var probset=req.result.createObjectStore("problemset",{keyPath:["contestId","index"]})
@@ -79,6 +82,7 @@ req.onupgradeneeded=a=>{
     store.createIndex("submissionId","submissionId")
     store.createIndex("status","status")
     store.createIndex("list","list")
+    initDB=true
 }
 let reverseIndexOrder=false
 async function loadFromDB(){
@@ -92,7 +96,6 @@ async function loadFromDB(){
     problemIds=probs.map(a=>a.contestId+a.index)
     data.problemset={}
     data.problemData={}
-    data.problemLists={}
     for(var i of probs){
         data.problemset[i.contestId+i.index]=i
         data.problemData[i.contestId+i.index]={
@@ -140,12 +143,11 @@ async function refreshProblems(){
     problemIds=resp.problems.map(a=>a.contestId+a.index)
     data.problemset={}
     //data.problemData={}
-    data.problemLists={}
     for(var i of resp.problems){
         //i.id=[i.contestId,i.index]
         data.problemset[i.contestId+i.index]=i
         if(!data.problemData[i.contestId+i.index]){
-                data.problemData[i.contestId+i.index]={
+            data.problemData[i.contestId+i.index]={
                 contestId:i.contestId,
                 index:i.index,
                 viewTime:null,
@@ -158,6 +160,8 @@ async function refreshProblems(){
     }
     for(var i of resp.problemStatistics){
         data.problemset[i.contestId+i.index].solvedCount=i.solvedCount
+    }
+    for(var i of resp.problems){
         obStore.put(data.problemset[i.contestId+i.index])
     }
 }
@@ -244,6 +248,7 @@ Display index/link, title, difficulty
 }
 
 function listProblems(){
+    document.getElementById("problemList").innerHTML=""
     for(let i of problemIds){
         var prEl=genProblemEl(i)
         document.getElementById("problemList").append(prEl)
@@ -279,19 +284,12 @@ function getTagEl(tag,isUser=false){
     }
     return tagElem
 }
-document.getElementById("addListBtn").addEventListener("click",a=>{
-    data.problemData[curProbId].lists.push(document.getElementById("addList").value)
-    updProb(curProbId)
-    var listsEl=document.getElementById("problemTags")
 
-    listsEl.append(getTagEl(document.getElementById("addList").value,true))
-})
 function removeTag(tag){
     data.problemData[curProbId].lists=data.problemData[curProbId].lists.filter(b=>b!=tag)//replace with set later
     updProb(curProbId)
     loadProb(curProbId)
 }
-loadFromDB().then(listProblems)
 //requestAPI("user.friends",{}).then(console.log)
 //requestAPI("problemset.problems",{tags:"dfs and similar"}).then(console.log)
 function toHMS(secs){
@@ -384,3 +382,24 @@ function loadUser(handle){
     }
 }
 let tagTypes=["2-sat","binary search","bitmasks","brute force","chinese remainder theorem","combinatorics","constructive algorithms","data structures","dfs and similar","divide and conquer","dp","dsu","expression parsing","fft","flows","games","geometry","graph matchings","graphs","greedy","hashing","implementation","interactive","math","matrices","meet-in-the-middle","number theory","probabilities","schedules","shortest paths","sortings","string suffix structures","strings","ternary search","trees","two pointers"]
+document.addEventListener("DOMContentLoaded",()=>{
+    console.log("document DOM loaded")
+    document.getElementById("addListBtn").addEventListener("click",a=>{
+        data.problemData[curProbId].lists.push(document.getElementById("addList").value)
+        updProb(curProbId)
+        var listsEl=document.getElementById("problemTags")
+
+        listsEl.append(getTagEl(document.getElementById("addList").value,true))
+    })
+    waitFor(req).then(async ()=>{
+        console.log("opened")
+        if(initDB){
+            console.log("fetching problems")
+            await refreshProblems()
+        }else{
+            console.log("load from DB")
+            await loadFromDB()
+        }
+        listProblems()
+    })
+})
