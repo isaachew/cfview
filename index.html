@@ -6,7 +6,7 @@
         <script src="problems.js"></script>
     </head>
     <body>
-        Set handle: <input onchange="loadUser(this.value)" placeholder="isaachew">
+        Set handle: <input onchange="loadUser(this.value)" placeholder="isaachew" id="handleInput">
         <div>
             <div id="problemSearch">
                 <div><label>Title: <input id="searchTitle"></label><label><input type="checkbox" id="searchRegexp"> Regex search</label></div>
@@ -34,22 +34,26 @@
                 </div>
                 <div>
                     <span id="probStatus"></span>
+                    View time: <span id="probViewTime"></span>
                 </div>
                 <div>
                     Notes:
                     <textarea id="probNotes"></textarea>
                 </div>
-                <table id="submissionsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Verdict</th>
-                            <th>Rel. Time</th>
-                        </tr>
-                    </thead>
-                    <tbody id="probSubmissions">
-                    </tbody>
-                </table>
+                <div>
+                    Your Submissions:
+                    <table id="submissionsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Verdict</th>
+                                <th>Rel. Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="probSubmissions">
+                        </tbody>
+                    </table>
+                </div>
                 <div>
                     <div>Problem tags:</div>
                     <div id="problemTags"></div>

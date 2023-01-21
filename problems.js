@@ -1,5 +1,4 @@
 var userHandle=localStorage.userHandle||null
-
 //A helper function to request from the Codeforces API.
 async function sha512(string){
     var textBuf=new Uint8Array(Array.from(string).map(a=>a.charCodeAt()))
@@ -243,6 +242,7 @@ Display index/link, title, difficulty
     else if(data.problemData[probid].attempted)el.style.backgroundColor="#ffa"
     else if(data.problemData[probid].notes)el.style.backgroundColor="#aaf"
     else if(data.problemData[probid].viewTime)el.style.backgroundColor="#aff"
+    //else el.style.backgroundColor="#"+(Math.random()*16777216|16777216).toString(16).slice(1)
 
     return el
 }
@@ -298,6 +298,7 @@ function toHMS(secs){
 }
 function loadProb(pid){
     curProbId=pid
+    document.getElementById("probViewTime").textContent=data.problemData[pid].viewTime
     document.getElementById("probId").textContent=pid
     document.getElementById("probName").textContent=data.problemset[pid].name
     document.getElementById("probStatus").textContent=data.problemData[pid].status??"";
@@ -365,8 +366,9 @@ function searchProblems(){
         document.getElementById("problemList").appendChild(genProblemEl(i))
     }
 }
-function loadUser(handle){
-    userHandle=handle
+async function loadUser(handle){
+    localStorage.userHandle=userHandle=handle
+    let db=await waitFor(req)
     let trans=req.result.transaction(["problems","submissions"],"readwrite")
     let probos=trans.objectStore("problems")
     let sos=trans.objectStore("submissions")
@@ -384,6 +386,13 @@ function loadUser(handle){
 let tagTypes=["2-sat","binary search","bitmasks","brute force","chinese remainder theorem","combinatorics","constructive algorithms","data structures","dfs and similar","divide and conquer","dp","dsu","expression parsing","fft","flows","games","geometry","graph matchings","graphs","greedy","hashing","implementation","interactive","math","matrices","meet-in-the-middle","number theory","probabilities","schedules","shortest paths","sortings","string suffix structures","strings","ternary search","trees","two pointers"]
 document.addEventListener("DOMContentLoaded",()=>{
     console.log("document DOM loaded")
+
+    if(userHandle==null){
+        document.getElementById("handleInput").value="isaachew"
+        loadUser("isaachew")
+    }else{
+        document.getElementById("handleInput").value=userHandle
+    }
     document.getElementById("addListBtn").addEventListener("click",a=>{
         data.problemData[curProbId].lists.push(document.getElementById("addList").value)
         updProb(curProbId)
