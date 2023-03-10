@@ -26,6 +26,11 @@ Problem stats viewer:
 - Your contests in list form
 - Different colours for different lists?
 
+- Manage problem lists somehow?
+  - Each list has a colour
+  - Lists are ordered
+
+- Profile viewer
 
 Unlisted Codeforces API (/data):
 Requests use a CSRF token in meta tag on page (use document.querySelector("[name='X-Csrf-Token']").content)

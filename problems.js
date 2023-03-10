@@ -1,4 +1,4 @@
-var userHandle=localStorage.userHandle||null
+var userHandle=null
 //A helper function to request from the Codeforces API.
 async function sha512(string){
     var textBuf=new Uint8Array(Array.from(string).map(a=>a.charCodeAt()))
@@ -83,7 +83,7 @@ req.onupgradeneeded=a=>{
     store.createIndex("list","list")
     initDB=true
 }
-let reverseIndexOrder=false
+let reverseIndexOrder=true
 async function loadFromDB(){
     let db=await waitFor(req)
     var trans=db.transaction(["problemset","problems","submissions"],"readwrite")
@@ -238,11 +238,12 @@ Display index/link, title, difficulty
     el.addEventListener("click",function(){
         loadProb(probid)
     })
-    if(data.problemData[probid].solved)el.style.backgroundColor="#afa"
+    if(~data.problemData[probid].lists.indexOf(""))el.style.backgroundColor="#caf"
+
+    else if(data.problemData[probid].solved)el.style.backgroundColor="#afa"
     else if(data.problemData[probid].attempted)el.style.backgroundColor="#ffa"
     else if(data.problemData[probid].notes)el.style.backgroundColor="#aaf"
     else if(data.problemData[probid].viewTime)el.style.backgroundColor="#aff"
-    //else el.style.backgroundColor="#"+(Math.random()*16777216|16777216).toString(16).slice(1)
 
     return el
 }
@@ -299,7 +300,7 @@ function toHMS(secs){
 function loadProb(pid){
     curProbId=pid
     document.getElementById("probViewTime").textContent=data.problemData[pid].viewTime
-    document.getElementById("probId").textContent=pid
+    document.getElementById("probId").textContent=`(${pid})`
     document.getElementById("probName").textContent=data.problemset[pid].name
     document.getElementById("probStatus").textContent=data.problemData[pid].status??"";
     document.getElementById("probNotes").value=data.problemData[pid].notes
@@ -330,12 +331,9 @@ async function updProb(pid){
     let db=await waitFor(req)
     let trans=db.transaction("problems","readwrite")
     let os=trans.objectStore("problems")
-    let pref=data.problemData[pid]
-    pref.notes=document.getElementById("probNotes").value
-    os.put(pref)
+    os.put(data.problemData[pid])
 }
 function unviewProb(pid){
-    document.getElementById("probId").value=pid
     data.problemData[pid].viewTime=null
 }
 function searchProblems(){
@@ -355,12 +353,18 @@ function searchProblems(){
     let ratingMax=document.getElementById("searchRatingMax").value
     let rateSearch=ratingMin!=""||ratingMax!=""
     let sRes=rateSearch?indexF.filter(a=>data.problemset[a].rating>=(+ratingMin||0)&&data.problemset[a].rating<=(+ratingMax||Infinity)):indexF
-    let tags=document.getElementById("searchTags").value.split(",")
-    if(tags[0]=="")tags=[]
-    sRes=sRes.filter(a=>tags.every(b=>data.problemset[a].tags.includes(b)))
-    let lists=document.getElementById("searchLists").value.split(",")
-    if(lists[0]=="")lists=[]
-    sRes=sRes.filter(a=>lists.every(b=>data.problemData[a].lists.includes(b)))
+
+    let tagQuery=document.getElementById("searchTags").value
+    if(tagQuery!=""){
+        let tags=tagQuery.split(",")
+        sRes=sRes.filter(a=>tags.every(b=>data.problemset[a].tags.includes(b)))
+    }
+
+    let listQuery=document.getElementById("searchLists").value
+    if(listQuery!=""){
+        let lists=listQuery.split(",")
+        sRes=sRes.filter(a=>lists.every(b=>data.problemData[a].lists.includes(b)))
+    }
     //console.log(sRes)
     for(let i of sRes){
         document.getElementById("problemList").appendChild(genProblemEl(i))
@@ -386,7 +390,7 @@ async function loadUser(handle){
 let tagTypes=["2-sat","binary search","bitmasks","brute force","chinese remainder theorem","combinatorics","constructive algorithms","data structures","dfs and similar","divide and conquer","dp","dsu","expression parsing","fft","flows","games","geometry","graph matchings","graphs","greedy","hashing","implementation","interactive","math","matrices","meet-in-the-middle","number theory","probabilities","schedules","shortest paths","sortings","string suffix structures","strings","ternary search","trees","two pointers"]
 document.addEventListener("DOMContentLoaded",()=>{
     console.log("document DOM loaded")
-
+    userHandle=localStorage.userHandle||null
     if(userHandle==null){
         document.getElementById("handleInput").value="isaachew"
         loadUser("isaachew")
@@ -400,6 +404,10 @@ document.addEventListener("DOMContentLoaded",()=>{
 
         listsEl.append(getTagEl(document.getElementById("addList").value,true))
     })
+    document.getElementById("probNotes").onchange=e=>{
+        data.problemData[curProbId].notes=e.target.value
+        updProb(curProbId)
+    }
     waitFor(req).then(async ()=>{
         console.log("opened")
         if(initDB){

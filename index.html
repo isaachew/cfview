@@ -2,7 +2,7 @@
 <html>
     <head>
         <title></title>
-        <link rel="stylesheet" href="problems.css">
+        <link rel="stylesheet" href="index.css">
         <script src="problems.js"></script>
     </head>
     <body>
@@ -22,6 +22,7 @@
                 <button onclick="searchProblems()">Search</button>
             </div>
             <div id="problemList"></div>
+            <div id="contestList"></div>
             <div>
                 <!--<button onclick="getProblem()">Random problem</button>-->
                 <button onclick="refreshProblems()">Reload problems</button>
@@ -30,7 +31,7 @@
 
             <div id="probInfo">
                 <div>
-                    Problem: <span id="probName"></span> (<span id="probId"></span>)
+                    Problem: <span id="probName"></span> <span id="probId"></span>
                 </div>
                 <div>
                     <span id="probStatus"></span>
